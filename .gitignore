@@ -8,6 +8,7 @@ temp/
 /test/
 /dist/
 /sc/
+/build/
 
 # Python 字节码缓存
 __pycache__/
