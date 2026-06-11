@@ -76,3 +76,8 @@ loke_tools/
 - **Ultralytics** >= 8.0
 - **PyQt5** >= 5.15.9
 - **OpenCV** >= 4.8
+
+## 软件链接
+通过网盘分享的文件：洛克工具-盒子识别.zip
+链接: https://pan.baidu.com/s/1vtCCsdiRCA7-QxWke3Ogzw 提取码: tprn 
+--来自百度网盘超级会员v1的分享
