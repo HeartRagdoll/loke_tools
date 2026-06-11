@@ -25,14 +25,14 @@
     },
     "detect_interval_ms": 700,
     "hide_interval_ms": 20000,
-    "last_model_box": "box_model_n1.pt",
+    "last_model_box": "box_model_250_20_yolo11n.pt",
     "box_conf_threshold": 0.9,
-    "last_model_attr": "attr_model_n1.pt",
+    "last_model_attr": "attr_model_250_50_yolo11n.pt",
     "attr_conf_threshold": 0.7,
     "window_geometry": {
         "main": {
-            "x": 577,
-            "y": 47,
+            "x": 621,
+            "y": 304,
             "width": 473,
             "height": 90
         },

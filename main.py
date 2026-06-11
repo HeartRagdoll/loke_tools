@@ -2,10 +2,18 @@
 洛克工具
 基于 YOLO11 的两阶段识别（盒子定位 + 属性识别）
 """
+import ctypes
 import os
 import sys
 import traceback
 from pathlib import Path
+
+# Windows 任务栏图标
+if sys.platform == "win32":
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("RockTool.LockeTools.2_0")
+    except Exception:
+        pass
 
 # 确保项目根目录在 sys.path 中
 PROJECT_ROOT = Path(__file__).parent

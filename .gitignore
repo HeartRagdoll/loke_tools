@@ -3,13 +3,13 @@
 # 忽略任意位置的 temp 文件夹（不常用）
 temp/
 # 忽略 nested/folder 文件夹（相对路径）
-/models/
-/data/
+attr/
+box/
 /test/
 /dist/
 /sc/
 /build/
-
+/config.json
 # Python 字节码缓存
 __pycache__/
 *.py[cod]

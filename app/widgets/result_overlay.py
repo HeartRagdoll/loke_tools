@@ -1,8 +1,12 @@
 """半透明识别结果浮窗 — 拖拽 + 伸缩 + 自动隐藏"""
+import time
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPixmap, QImage, QColor
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy,
+    QGraphicsDropShadowEffect,
+)
 
 from app.widgets.drag_resize_mixin import DragResizeMixin
 
@@ -59,6 +63,12 @@ class ResultOverlay(DragResizeMixin, QWidget):
         self._hide_timer.setInterval(hide_delay_ms)
         self._hide_timer.timeout.connect(self.hide)
 
+        # 倒计时刷新定时器
+        self._hide_deadline: float = 0.0
+        self._countdown_timer = QTimer(self)
+        self._countdown_timer.setInterval(100)
+        self._countdown_timer.timeout.connect(self._tick_countdown)
+
         self._init_ui()
 
     # ---- 重写 Mixin 条件 -----------------------------------------
@@ -81,13 +91,32 @@ class ResultOverlay(DragResizeMixin, QWidget):
         root.setContentsMargins(8, 6, 8, 6)
         root.setSpacing(4)
 
+        # ---- 属性行：属性文字 + 倒计时 ----
+        attr_row = QHBoxLayout()
+        attr_row.setSpacing(4)
+
         self.attr_label = QLabel()
         self.attr_label.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.attr_label.setWordWrap(True)
         self.attr_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.attr_label.setStyleSheet("background: transparent;")
         self.attr_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
-        root.addWidget(self.attr_label, 0)
+        attr_row.addWidget(self.attr_label, 1)
+
+        self._countdown_label = QLabel()
+        self._countdown_label.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self._countdown_label.setAlignment(Qt.AlignRight | Qt.AlignTop)
+        self._countdown_label.setFixedWidth(20)
+        self._countdown_label.setStyleSheet(
+            "background: transparent; color: rgba(166,173,200,0.8); font-size: 10px;"
+        )
+        attr_row.addWidget(self._countdown_label, 0)
+
+        root.addLayout(attr_row, 0)
+
+        # 文字黑色描边
+        self._add_text_stroke(self.attr_label)
+        self._add_text_stroke(self._countdown_label)
 
         bottom = QHBoxLayout()
         bottom.setContentsMargins(0, 0, 0, 0)
@@ -103,6 +132,17 @@ class ResultOverlay(DragResizeMixin, QWidget):
         bottom.addWidget(self.box_image, 0)
 
         root.addLayout(bottom, 1)
+
+    # ---- 文字描边 -------------------------------------------------
+
+    @staticmethod
+    def _add_text_stroke(label: QLabel) -> None:
+        """为 QLabel 文字添加黑色描边效果"""
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setColor(QColor(0, 0, 0, 200))
+        shadow.setOffset(0, 0)
+        shadow.setBlurRadius(3)
+        label.setGraphicsEffect(shadow)
 
     def resizeEvent(self, event) -> None:
         QWidget.resizeEvent(self, event)
@@ -125,6 +165,8 @@ class ResultOverlay(DragResizeMixin, QWidget):
         # 有检测结果时：点击隐藏浮窗
         if self._result_showing and event.button() == Qt.LeftButton:
             self._hide_timer.stop()
+            self._countdown_timer.stop()
+            self._countdown_label.setText("")
             self.hide()
             event.accept()
             return
@@ -151,7 +193,7 @@ class ResultOverlay(DragResizeMixin, QWidget):
             html_parts = []
             for i, word in enumerate(parts):
                 color = self._LABEL_COLORS.get(word, self._DEFAULT_COLOR)
-                sep = ' <span style="color:rgba(166,173,200,0.5);">-</span> ' if i < len(parts) - 1 else ''
+                sep = '<span style="color:rgba(166,173,200,0.5);">-</span>' if i < len(parts) - 1 else ''
                 html_parts.append(
                     f'<span style="color:{color}; font-weight:bold; font-size:16px;">{word}</span>{sep}'
                 )
@@ -198,6 +240,7 @@ class ResultOverlay(DragResizeMixin, QWidget):
         self._result_showing = False
         self.attr_label.setText("")
         self.attr_label.setVisible(False)
+        self._countdown_label.setText("")
         self.box_image.clear()
         self.show()
         self._reset_hide_timer()
@@ -213,6 +256,8 @@ class ResultOverlay(DragResizeMixin, QWidget):
                 self._reset_hide_timer()
         else:
             self._hide_timer.stop()
+            self._countdown_timer.stop()
+            self._countdown_label.setText("")
         self.update()
 
     @property
@@ -229,5 +274,18 @@ class ResultOverlay(DragResizeMixin, QWidget):
 
     def _reset_hide_timer(self) -> None:
         self._hide_timer.stop()
+        self._countdown_timer.stop()
         if self._locked and self._hide_delay_ms > 0:
             self._hide_timer.start()
+            self._hide_deadline = time.time() + self._hide_delay_ms / 1000.0
+            self._countdown_timer.start()
+            self._tick_countdown()
+
+    def _tick_countdown(self) -> None:
+        """倒计时刷新"""
+        remain = max(0, self._hide_deadline - time.time())
+        if remain <= 0:
+            self._countdown_label.setText("")
+            self._countdown_timer.stop()
+        else:
+            self._countdown_label.setText(f"{remain:.0f}s")
