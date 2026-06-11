@@ -153,6 +153,14 @@ class SettingsWindow(QDialog):
         detect_row.addWidget(self._detect_spin)
         detect_row.addWidget(QLabel("检测一次"))
         detect_row.addStretch()
+
+        detect_row.addWidget(QLabel("字体"))
+        self._font_spin = QSpinBox()
+        self._font_spin.setRange(8, 48)
+        self._font_spin.setSuffix(" px")
+        self._font_spin.setValue(self._config.overlay_font_size)
+        detect_row.addWidget(self._font_spin)
+
         root.addLayout(detect_row)
 
         # ---- 隐藏延迟 ----
@@ -208,6 +216,7 @@ class SettingsWindow(QDialog):
         self._initial_hide_ms = self._hide_spin.value()
         self._initial_box_conf = self._box_conf_spin.value()
         self._initial_attr_conf = self._attr_conf_spin.value()
+        self._initial_font_size = self._font_spin.value()
 
     def _is_dirty(self) -> bool:
         """判断用户是否修改了任何设置"""
@@ -218,6 +227,7 @@ class SettingsWindow(QDialog):
             or self._hide_spin.value() != self._initial_hide_ms
             or self._box_conf_spin.value() != self._initial_box_conf
             or self._attr_conf_spin.value() != self._initial_attr_conf
+            or self._font_spin.value() != self._initial_font_size
         )
 
     def closeEvent(self, event) -> None:
@@ -410,5 +420,9 @@ class SettingsWindow(QDialog):
         if self._detector:
             self._detector.box_conf = box_conf
             self._detector.attr_conf = attr_conf
+
+        # 保存并应用浮窗字体大小
+        font_size = self._font_spin.value()
+        self._config.overlay_font_size = font_size
 
         self.accept()

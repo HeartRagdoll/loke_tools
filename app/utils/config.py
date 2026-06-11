@@ -117,6 +117,17 @@ class ConfigManager:
     def attr_conf_threshold(self, value: float) -> None:
         self.set("attr_conf_threshold", value)
 
+    # ---- 浮窗显示 ----
+
+    @property
+    def overlay_font_size(self) -> int:
+        """浮窗结果文字大小，单位 px"""
+        return self.get("overlay_font_size", 16)
+
+    @overlay_font_size.setter
+    def overlay_font_size(self, value: int) -> None:
+        self.set("overlay_font_size", value)
+
     # ---- 上次标注位置（像素坐标） ----
 
     def get_last_rects(self) -> dict:

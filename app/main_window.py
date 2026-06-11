@@ -119,7 +119,8 @@ class MainWindow(QMainWindow):
         if self._overlay is not None:
             return
         self._overlay = ResultOverlay(
-            hide_delay_ms=self._config.hide_interval_ms)
+            hide_delay_ms=self._config.hide_interval_ms,
+            font_size=self._config.overlay_font_size)
 
         # 恢复上次保存的位置
         geo = self._config.overlay_geometry
@@ -346,8 +347,10 @@ class MainWindow(QMainWindow):
         if dialog._want_dataset:
             self._open_dataset_window()
 
-        # 刷新主窗口模型加载状态
+        # 刷新主窗口模型加载状态 & 浮窗字体大小
         self._refresh_model_status()
+        if self._overlay:
+            self._overlay.set_font_size(self._config.overlay_font_size)
 
     def _restore_geometry(self) -> None:
         geo = self._config.window_geometry.get("main")

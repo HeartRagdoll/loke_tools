@@ -25,14 +25,14 @@
     },
     "detect_interval_ms": 700,
     "hide_interval_ms": 20000,
-    "last_model_box": "box_model_250_20_yolo11n.pt",
+    "last_model_box": "box_model_n1.pt",
     "box_conf_threshold": 0.85,
-    "last_model_attr": "attr_model_250_50_yolo11n.pt",
-    "attr_conf_threshold": 0.65,
+    "last_model_attr": "attr_model_n1.pt",
+    "attr_conf_threshold": 0.7,
     "window_geometry": {
         "main": {
-            "x": 807,
-            "y": 127,
+            "x": 604,
+            "y": 66,
             "width": 473,
             "height": 90
         },
@@ -72,9 +72,9 @@
         }
     },
     "overlay_geometry": {
-        "x": 1730,
+        "x": 1700,
         "y": 150,
-        "w": 180,
+        "w": 210,
         "h": 315,
         "locked": true
     },
@@ -84,5 +84,5 @@
         "w": 1400,
         "h": 1080
     },
-    "overlay_font_size": 18
+    "overlay_font_size": 16
 }

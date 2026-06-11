@@ -18,11 +18,12 @@ class ResultOverlay(DragResizeMixin, QWidget):
         "普通": "#f9e2af",
         "通行证": "#d38aaa",
         "赛季奇遇": "#fab387",
-        "杂项": "#94e2d5",
+        "杂项": "#159bcb",
         "异色": "#89b4fa",
-        "奇异": "#a6e3a1",
+        # 红色
+        "奇异": "#b5639c", 
         "混系": "#cba6f7",
-        "污染": "#b4befe",
+        "污染": "#cb15b3",  # 深紫色
         "+魔攻": "#a6e3a1",
         "+魔防": "#a6e3a1",
         "+物攻": "#a6e3a1",
@@ -38,7 +39,7 @@ class ResultOverlay(DragResizeMixin, QWidget):
     _MIN_DRAG_W = 180
     _MIN_DRAG_H = 200
 
-    def __init__(self, parent=None, hide_delay_ms: int = 3000):
+    def __init__(self, parent=None, hide_delay_ms: int = 3000, font_size: int = 16):
         QWidget.__init__(self, parent)
         DragResizeMixin.__init__(
             self, min_w=self._MIN_DRAG_W, min_h=self._MIN_DRAG_H,
@@ -55,6 +56,7 @@ class ResultOverlay(DragResizeMixin, QWidget):
 
         self._locked = False
         self._result_showing = False   # 有检测结果时 True，点击可隐藏
+        self._font_size = font_size    # 属性文字大小
 
         # 自动隐藏定时器
         self._hide_delay_ms = hide_delay_ms
@@ -91,36 +93,36 @@ class ResultOverlay(DragResizeMixin, QWidget):
         root.setContentsMargins(8, 6, 8, 6)
         root.setSpacing(4)
 
-        # ---- 属性行：属性文字 + 倒计时 ----
+        # ---- 属性行 ----
         attr_row = QHBoxLayout()
         attr_row.setSpacing(4)
 
         self.attr_label = QLabel()
         self.attr_label.setAttribute(Qt.WA_TransparentForMouseEvents)
         self.attr_label.setWordWrap(True)
-        self.attr_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.attr_label.setAlignment(Qt.AlignRight | Qt.AlignTop)
         self.attr_label.setStyleSheet("background: transparent;")
         self.attr_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
         attr_row.addWidget(self.attr_label, 1)
-
-        self._countdown_label = QLabel()
-        self._countdown_label.setAttribute(Qt.WA_TransparentForMouseEvents)
-        self._countdown_label.setAlignment(Qt.AlignRight | Qt.AlignTop)
-        self._countdown_label.setFixedWidth(20)
-        self._countdown_label.setStyleSheet(
-            "background: transparent; color: rgba(166,173,200,0.8); font-size: 10px;"
-        )
-        attr_row.addWidget(self._countdown_label, 0)
 
         root.addLayout(attr_row, 0)
 
         # 文字黑色描边
         self._add_text_stroke(self.attr_label)
-        self._add_text_stroke(self._countdown_label)
 
         bottom = QHBoxLayout()
         bottom.setContentsMargins(0, 0, 0, 0)
         bottom.setSpacing(0)
+
+        self._countdown_label = QLabel()
+        self._countdown_label.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self._countdown_label.setAlignment(Qt.AlignRight | Qt.AlignTop)
+        self._countdown_label.setFixedWidth(36)
+        self._countdown_label.setStyleSheet(
+            "background: transparent; color: rgba(166,173,200,0.8); font-size: 10px;"
+        )
+        bottom.addWidget(self._countdown_label, 0)
+
         bottom.addStretch(1)
 
         self.box_image = QLabel()
@@ -132,6 +134,9 @@ class ResultOverlay(DragResizeMixin, QWidget):
         bottom.addWidget(self.box_image, 0)
 
         root.addLayout(bottom, 1)
+
+        # 倒计时描边
+        self._add_text_stroke(self._countdown_label)
 
     # ---- 文字描边 -------------------------------------------------
 
@@ -180,6 +185,10 @@ class ResultOverlay(DragResizeMixin, QWidget):
 
     # ---- 显示逻辑 -------------------------------------------------
 
+    def set_font_size(self, px: int) -> None:
+        """动态设置属性文字大小"""
+        self._font_size = px
+
     def show_result(self, box: tuple, attrs: dict, roi_image: np.ndarray = None) -> None:
         parts = []
         for region in ("top", "middle", "bottom"):
@@ -190,14 +199,31 @@ class ResultOverlay(DragResizeMixin, QWidget):
         self._result_showing = bool(parts)
 
         if parts:
-            html_parts = []
-            for i, word in enumerate(parts):
-                color = self._LABEL_COLORS.get(word, self._DEFAULT_COLOR)
-                sep = '<span style="color:rgba(166,173,200,0.5);">-</span>' if i < len(parts) - 1 else ''
-                html_parts.append(
-                    f'<span style="color:{color}; font-weight:bold; font-size:16px;">{word}</span>{sep}'
-                )
-            self.attr_label.setText("".join(html_parts))
+            def _make_span(w: str, c: str) -> str:
+                return f'<span style="white-space:nowrap; color:{c}; font-weight:bold; font-size:{self._font_size}px;">{w}</span>'
+
+            lines = []
+            # 前两个结果在第一行，第三个在第二行
+            if len(parts) <= 2:
+                line_parts = []
+                for i, word in enumerate(parts):
+                    color = self._LABEL_COLORS.get(word, self._DEFAULT_COLOR)
+                    sep = ' <span style="color:rgba(166,173,200,0.5);">-</span> ' if i < len(parts) - 1 else ''
+                    line_parts.append(_make_span(word, color) + sep)
+                lines.append("".join(line_parts))
+            else:
+                # 第1行：第1 + 第2个结果
+                line1 = []
+                for i in range(2):
+                    color = self._LABEL_COLORS.get(parts[i], self._DEFAULT_COLOR)
+                    sep = ' <span style="color:rgba(166,173,200,0.5);">-</span> ' if i == 0 else ''
+                    line1.append(_make_span(parts[i], color) + sep)
+                lines.append("".join(line1))
+                # 第2行：第3个结果
+                color = self._LABEL_COLORS.get(parts[2], self._DEFAULT_COLOR)
+                lines.append(_make_span(parts[2], color))
+
+            self.attr_label.setText("<br>".join(lines))
             self.attr_label.setVisible(True)
         else:
             self.attr_label.setText("")
