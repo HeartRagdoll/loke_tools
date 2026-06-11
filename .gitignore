@@ -1,0 +1,21 @@
+# 忽略根目录下的 logs 文件夹
+/logs/
+# 忽略任意位置的 temp 文件夹（不常用）
+temp/
+# 忽略 nested/folder 文件夹（相对路径）
+/models/
+/data/
+/test/
+/dist/
+/sc/
+
+# Python 字节码缓存
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 其他常见 Python 缓存
+.pytest_cache/
+.mypy_cache/
+.tox/
+*.so
